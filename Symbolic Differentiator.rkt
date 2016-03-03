@@ -159,40 +159,46 @@
 
 ;;----Function to take partial-derivative w.r.t var-----
 
-(define (par-deriv infix-exp var)
-  (define (prefix-par-deriv exp var)
-    (cond
-      ;;Base Cases
-      ((number? exp) 0) 
-      ((variable? exp) (if (same-variable? exp var) 1 0))
-      
-      ;;Implementations of Separation Rules
-      ((is-bi-oper? (car exp))          
-       (cond ((sum? exp) (make-sum (prefix-par-deriv (addend exp) var)
-                                   (prefix-par-deriv (augend exp) var)))
-             ((product? exp) (make-sum
-                              (make-product (multiplier exp) (prefix-par-deriv (multiplicand exp) var))
-                              (make-product (multiplicand exp) (prefix-par-deriv (multiplier exp) var))))
-             ((expo? exp) (make-product (expo-pow exp)
-                                        (prefix-par-deriv (make-product (expo-pow exp)
-                                                                        (make-nat-log (expo-base exp))) var)))))
-      
-      ;;Implementation of Chain Rule
-      ((is-known-func? (car exp))
-       (make-product (prefix-par-deriv (first-operand (car exp) exp) var)
-                     (cond ((is-trig? exp) (trig-deriv exp))
-                           ((is-nat-log? exp) (make-expo (nat-log-num exp) -1))
-                           ((is-log? exp) (prefix-par-deriv (nat-log exp) var))
-                           (else (error "unknown expression type: DERIV" exp)))))      
-      
-      (else (error "unknown expression type: DERIV" exp))))
-  
-  (pre-to-in (prefix-par-deriv (in-to-pre infix-exp) var)))
+;; prefix-exp sym -> prefix-exp
+;; Consumes a prefix expression to gives the corresponding
+;; expression for the derivative
+
+(define (prefix-par-deriv exp var)
+  (cond
+    ;;Base Cases
+    ((number? exp) 0) 
+    ((variable? exp) (if (same-variable? exp var) 1 0))
+    
+    ;;Implementations of Separation Rules
+    ((is-bi-oper? (car exp))          
+     (cond ((sum? exp) (make-sum (prefix-par-deriv (addend exp) var)
+                                 (prefix-par-deriv (augend exp) var)))
+           ((product? exp) (make-sum
+                            (make-product (multiplier exp) (prefix-par-deriv (multiplicand exp) var))
+                            (make-product (multiplicand exp) (prefix-par-deriv (multiplier exp) var))))
+           ((expo? exp) (make-product (expo-pow exp)
+                                      (prefix-par-deriv (make-product (expo-pow exp)
+                                                                      (make-nat-log (expo-base exp))) var)))))
+    
+    ;;Implementation of Chain Rule
+    ((is-known-func? (car exp))
+     (make-product (prefix-par-deriv (first-operand (car exp) exp) var)
+                   (cond ((is-trig? exp) (trig-deriv exp))
+                         ((is-nat-log? exp) (make-expo (nat-log-num exp) -1))
+                         ((is-log? exp) (prefix-par-deriv (nat-log exp) var))
+                         (else (error "unknown expression type: DERIV" exp)))))      
+    
+    (else (error "unknown expression type: DERIV" exp))))
 
 
-;;Returns the nth partial of a expression for given variable list
-(define (n-partial exp var-list)
-  (if(= (length var-list) 1) (par-deriv exp (car var-list))
-     (par-deriv (n-partial exp (cdr var-list)) (car var-list))))
+;; Returns the nth partial of a prefix expression for given variable list
+(define (n-partial prefix-exp var-list)
+  (if(= (length var-list) 1) (prefix-par-deriv prefix-exp (car var-list))
+     (prefix-par-deriv (n-partial prefix-exp (cdr var-list)) (car var-list))))
 
-(n-partial '((sin x) * (cos x)) '(x x))
+;; filter io
+(define (filter-io infix-exp var-list)
+  (pre-to-in (n-partial (in-to-pre infix-exp) var-list)))
+
+
+(filter-io '((sin x) * (cos x)) '(x x))
