@@ -8,23 +8,23 @@
       (eq? '- item)
       (eq? '/ item)))
 
-(define (pre-to-in item)
+(define (pre->in item)
   (cond ((null? item) '())
         ((not (pair? item)) item)
         (else
          (if(is-bi-oper? (car item))
-            (list (pre-to-in (cadr item)) (car item) (pre-to-in (caddr item)))
-            (list (car item) (pre-to-in (cadr item)))))))
+            (list (pre->in (cadr item)) (car item) (pre->in (caddr item)))
+            (list (car item) (pre->in (cadr item)))))))
 
-(define (in-to-pre item) 
+(define (in->pre item) 
   (cond ((null? item) '())
         ((not (pair? item)) item)
         ((eq? (car item) 'log)
-         (make-log (in-to-pre (log-base item)) (in-to-pre (log-num item))))
+         (make-log (in->pre (log-base item)) (in->pre (log-num item))))
         (else
          (if(is-bi-oper? (cadr item))
-            (list (cadr item) (in-to-pre (car item)) (in-to-pre (caddr item)))
-            (list (car item) (in-to-pre (cadr item)))))))
+            (list (cadr item) (in->pre (car item)) (in->pre (caddr item)))
+            (list (car item) (in->pre (cadr item)))))))
 
 ;;------------For symbolic differentiation---------------
 
@@ -197,8 +197,26 @@
      (prefix-par-deriv (n-partial prefix-exp (cdr var-list)) (car var-list))))
 
 ;; filter io
+;; Converts inputs and outputs into required type (infix or prefix)
 (define (filter-io infix-exp var-list)
-  (pre-to-in (n-partial (in-to-pre infix-exp) var-list)))
+  (pre->in (n-partial (in->pre infix-exp) var-list)))
+
+;; parser
+(define (parse exp)
+  (match exp
+    [`(differentiate ,exp with ,var-list ...) (filter-io exp var-list)]
+    [`(derivative of ,exp) (filter-io exp '(x))]
+    [`(,(? symbol? order) derivative of ,exp)
+     (match order
+       [`second (filter-io exp '(x x))]
+       [`third (filter-io exp '(x x x))]
+       [`fourth (filter-io exp '(x x x x))]
+       [`fifth (filter-io exp '(x x x x x ))]
+       [else (error "Unknown order : If order more that 5, use (differentiate <exp> with <arg1> <arg2> ...)")])]
+    [else (error "Unknown expression -- PARSE")]))
+
+(parse '(derivative of (sin x) ))
+(parse '(second derivative of (sin x)))
+(parse '(fifth derivative of (sin x)))
 
 
-(filter-io '((sin x) * (cos x)) '(x x))
