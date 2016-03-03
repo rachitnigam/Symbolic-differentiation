@@ -1,5 +1,22 @@
 #lang racket
 
+;;----------List Manipulations---------------------
+;;Find a symbol in a list
+(define (memq item x)
+  (cond ((null? x) false)
+        ((eq? item (car x)) x)
+        (else (memq item (cdr x)))))
+
+;;Append two lists
+(define (append list1 list2)
+  (if(null? list1) list2
+     (cons (car list1) (append (cdr list1) list2))))
+
+;;Length of a lists
+(define (length item)
+  (if(null? item) 0
+     (+ 1 (length (cdr item)))))
+
 ;;--------To Convert an expression---------------
 (define (is-bi-oper? item)
   (or (eq? '+ item)
@@ -16,7 +33,8 @@
             (list (pre-to-in (cadr item)) (car item) (pre-to-in (caddr item)))
             (list (car item) (pre-to-in (cadr item)))))))
 
-(define (in-to-pre item) 
+(define (in-to-pre item)
+  
   (cond ((null? item) '())
         ((not (pair? item)) item)
         ((eq? (car item) 'log)
@@ -127,15 +145,20 @@
 (define (trig-deriv exp)
   (let ((func (car exp)))
     (cond ((eq? func 'sin)
-           (append (list 'cos) (cdr exp))) 
+           (append (list 'cos) (cdr exp)))
+          
           ((eq? func 'cos)
            (make-product (append (list 'sin) (cdr exp)) -1))
+          
           ((eq? func 'tan)
            (make-expo (append (list 'sec) (cdr exp)) 2))
+          
           ((eq? func 'cot)
            (make-product (make-expo (append (list 'csc) (cdr exp)) 2) -1))
+          
           ((eq? func 'sec)
            (make-product (append (list 'sec) (cdr exp)) (append (list 'tan) (cdr exp))))
+          
           ((eq? func 'csc)
            (make-product (make-product (append (list 'csc) (cdr exp)) (append (list 'cot) (cdr exp))) -1)))))
 
@@ -161,31 +184,28 @@
 
 (define (par-deriv infix-exp var)
   (define (prefix-par-deriv exp var)
-    (cond
-      ;;Base Cases
-      ((number? exp) 0) 
-      ((variable? exp) (if (same-variable? exp var) 1 0))
-      
-      ;;Implementations of Separation Rules
-      ((is-bi-oper? (car exp))          
-       (cond ((sum? exp) (make-sum (prefix-par-deriv (addend exp) var)
-                                   (prefix-par-deriv (augend exp) var)))
-             ((product? exp) (make-sum
-                              (make-product (multiplier exp) (prefix-par-deriv (multiplicand exp) var))
-                              (make-product (multiplicand exp) (prefix-par-deriv (multiplier exp) var))))
-             ((expo? exp) (make-product (expo-pow exp)
-                                        (prefix-par-deriv (make-product (expo-pow exp)
-                                                                        (make-nat-log (expo-base exp))) var)))))
-      
-      ;;Implementation of Chain Rule
-      ((is-known-func? (car exp))
-       (make-product (prefix-par-deriv (first-operand (car exp) exp) var)
-                     (cond ((is-trig? exp) (trig-deriv exp))
-                           ((is-nat-log? exp) (make-expo (nat-log-num exp) -1))
-                           ((is-log? exp) (prefix-par-deriv (nat-log exp) var))
-                           (else (error "unknown expression type: DERIV" exp)))))      
-      
-      (else (error "unknown expression type: DERIV" exp))))
+    
+    (cond ((number? exp) 0) ;;Base Cases
+          ((variable? exp) (if (same-variable? exp var) 1 0))
+          
+          ;;Implementations of Separation Rules
+          ((is-bi-oper? (car exp))          
+           (cond ((sum? exp) (make-sum (prefix-par-deriv (addend exp) var)
+                                       (prefix-par-deriv (augend exp) var)))
+                 ((product? exp) (make-sum
+                                  (make-product (multiplier exp) (prefix-par-deriv (multiplicand exp) var))
+                                  (make-product (multiplicand exp) (prefix-par-deriv (multiplier exp) var))))
+                 ((expo? exp) (make-product (expo-pow exp) (prefix-par-deriv (make-product (expo-pow exp) (make-nat-log (expo-base exp))) var)))))
+
+          ;;Implementation of Chain Rule
+          ((is-known-func? (car exp))
+           (make-product (prefix-par-deriv (first-operand (car exp) exp) var)
+                         (cond ((is-trig? exp) (trig-deriv exp))
+                               ((is-nat-log? exp) (make-expo (nat-log-num exp) -1))
+                               ((is-log? exp) (prefix-par-deriv (nat-log exp) var))
+                               (else (error "unknown expression type: DERIV" exp)))))      
+          
+          (else (error "unknown expression type: DERIV" exp))))
   
   (pre-to-in (prefix-par-deriv (in-to-pre infix-exp) var)))
 
@@ -195,4 +215,6 @@
   (if(= (length var-list) 1) (par-deriv exp (car var-list))
      (par-deriv (n-partial exp (cdr var-list)) (car var-list))))
 
-(n-partial '((sin x) * (cos x)) '(x x))
+(n-partial '(x ^ x) '(x))
+
+;;(make-product (expo-pow exp) (prefix-par-deriv (make-product (expo-pow exp) (make-nat-log (expo-base exp)))))
