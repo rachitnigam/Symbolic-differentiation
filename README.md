@@ -28,7 +28,7 @@ Here is a list of the functions and operations currently supported in the progra
 
 
 ####Project Closed
-**Reason:** The program uses a lot of levels of abstractions, making it impossible to fix bugs as I extend it. 
+**Reason:** The program uses a lot of levels of abstractions, making it impossible to fix bugs as more features are added to it. 
 
 **Conclusions**
 - Building abstractions is one of the most fundametal things in computer programming. This project was meant to demonstrate how building abstractions is useful in creating large programs.
