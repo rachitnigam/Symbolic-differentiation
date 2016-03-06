@@ -27,10 +27,11 @@ Here is a list of the functions and operations currently supported in the progra
 * ln : Natural logarithm (base e)
 
 
-####To do list
-- Create a proper setup and tutorial
-- Break up the program into smaller modules
-- optimize the code, remove redundant calls to functions
-- Write a parser for better interaction
-- Set up an interactive environment
-- Write an algebraic simplifier to make results more readable
+####Project Closed
+**Reason:** The program uses a lot of levels of abstractions, making it impossible to fix bugs as I extend it. 
+**Conclusions**
+- Building abstractions is one of the most fundametal things in computer programming. This project was meant to demonstrate how building abstractions is useful in creating large programs.
+- The program uses higher order functions to a great degree. I tried to extract as many common patterns as I could see and generalized them as higher order functions.
+- Even though abstractions are important, building too many abstractions (especially in the same file) is not very benificial. A balance must be struck between abstraction and the clarity of code.
+- In the end, the program was only ever meant to be a proof of concept and nothing more. It was not built with neither flexibilty nor extendility which became very obvious when I tried to extend it.
+- Armed with all the knowledge of common patterns, higher order functions and symbolic expressions, I am sure I can build a more robust differentiator in the future. I might do so one day, but it is not a priority. 
