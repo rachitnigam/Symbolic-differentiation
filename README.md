@@ -29,6 +29,7 @@ Here is a list of the functions and operations currently supported in the progra
 
 ####Project Closed
 **Reason:** The program uses a lot of levels of abstractions, making it impossible to fix bugs as I extend it. 
+
 **Conclusions**
 - Building abstractions is one of the most fundametal things in computer programming. This project was meant to demonstrate how building abstractions is useful in creating large programs.
 - The program uses higher order functions to a great degree. I tried to extract as many common patterns as I could see and generalized them as higher order functions.
